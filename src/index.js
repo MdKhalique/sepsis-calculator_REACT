@@ -1,17 +1,86 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
+import ReactDOM from 'react-dom';
+import './index.css'; // Import your CSS file
 import App from './App';
-import reportWebVitals from './reportWebVitals';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+// Your provided JavaScript code
+var gwd = gwd || {};
+gwd.actions = gwd.actions || {};
+gwd.actions.events = gwd.actions.events || {};
+gwd.actions.events.getElementById = function(id) {
+    var element = document.getElementById(id);
+    if (!element) {
+        var pageDeck = document.querySelector("gwd-pagedeck");
+        if (pageDeck) {
+            if (typeof pageDeck.getElementById === "function") {
+                element = pageDeck.getElementById(id)
+            }
+        }
+    }
+    if (!element) {
+        switch (id) {
+        case "document.body":
+            element = document.body;
+            break;
+        case "document":
+            element = document;
+            break;
+        case "window":
+            element = window;
+            break;
+        default:
+            break
+        }
+    }
+    return element
+}
+;
+gwd.actions.events.addHandler = function(eventTarget, eventName, eventHandler, useCapture) {
+    var targetElement = gwd.actions.events.getElementById(eventTarget);
+    if (targetElement) {
+        targetElement.addEventListener(eventName, eventHandler, useCapture)
+    }
+}
+;
+gwd.actions.events.removeHandler = function(eventTarget, eventName, eventHandler, useCapture) {
+    var targetElement = gwd.actions.events.getElementById(eventTarget);
+    if (targetElement) {
+        targetElement.removeEventListener(eventName, eventHandler, useCapture)
+    }
+}
+;
+gwd.actions.events.setInlineStyle = function(id, styles) {
+    var element = gwd.actions.events.getElementById(id);
+    if (!element || !styles) {
+        return
+    }
+    var transitionProperty = element.style.transition !== undefined ? "transition" : "-webkit-transition";
+    var prevTransition = element.style[transitionProperty];
+    var splitStyles = styles.split(/\s*;\s*/);
+    var nameValue;
+    splitStyles.forEach(function(splitStyle) {
+        if (splitStyle) {
+            var regex = new RegExp("[:](?![/]{2})");
+            nameValue = splitStyle.split(regex);
+            nameValue[1] = nameValue[1] ? nameValue[1].trim() : null;
+            if (!(nameValue[0] && nameValue[1])) {
+                return
+            }
+            element.style.setProperty(nameValue[0], nameValue[1])
+        }
+    });
+    function restoreTransition(event) {
+        var el = event.target;
+        el.style.transition = prevTransition;
+        el.removeEventListener(event.type, restoreTransition, false)
+    }
+    element.addEventListener("transitionend", restoreTransition, false);
+    element.addEventListener("webkitTransitionEnd", restoreTransition, false)
+}
+
+ReactDOM.render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>
+  </React.StrictMode>,
+  document.getElementById('root')
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
